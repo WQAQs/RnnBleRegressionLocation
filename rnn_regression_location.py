@@ -38,4 +38,27 @@ class Model(nn.Module):
         hidden = torch.zeros(self.n_layers, batch_size, self.hidden_dim).cuda()
         return hidden
 
+cuda0 = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# Instantiate the model with hyperparameters
+model = Model(input_size=dict_size, output_size=dict_size, hidden_dim=12, n_layers=1)
+# We'll also set the model to the device that we defined earlier (default is CPU)
+model.to(cuda0)
 criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+# Training Run
+for epoch in range(1, n_epochs + 1):
+    optimizer.zero_grad()  # Clears existing gradients from previous epoch
+    input_seq=input_seq.cuda()
+    output, hidden = model(input_seq)
+    target_res = target_seq.view(-1).long()
+    loss = criterion(output, target_res)
+    loss.backward()  # Does backpropagation and calculates gradients
+    optimizer.step()  # Updates the weights accordingly
+
+    if epoch % 10 == 0:
+        print('Epoch: {}/{}.............'.format(epoch, n_epochs), end=' ')
+        print("Loss: {:.4f}".format(loss.item()))
+
+
